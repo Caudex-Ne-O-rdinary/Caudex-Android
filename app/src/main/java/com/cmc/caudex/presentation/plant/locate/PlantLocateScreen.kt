@@ -6,7 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -44,6 +43,8 @@ import coil.compose.AsyncImage
 import com.cmc.caudex.R
 import com.cmc.caudex.presentation.designsystem.components.CaudexButton
 import com.cmc.caudex.presentation.designsystem.theme.CaudexTheme
+import com.cmc.caudex.presentation.garden.GardenBoard
+import com.cmc.caudex.presentation.garden.GardenBoardPlantUiModel
 import kotlin.math.roundToInt
 
 private const val PLANT_SCALE_MIN_DP = 40
@@ -161,142 +162,119 @@ private fun PlantLocateScreenContent(
                 .padding(innerPadding),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            BoxWithConstraints(
+            val latestRatioX by rememberUpdatedState(state.currentPlant.ratioX)
+            val latestRatioY by rememberUpdatedState(state.currentPlant.ratioY)
+            val latestScalePx by rememberUpdatedState(currentScalePx)
+
+            GardenBoard(
+                gardenImageUrl = state.gardenImageUrl,
+                plants = state.existingPlants.plants.map { it.toGardenBoardPlantUiModel() },
+                contentModifier = { metrics ->
+                    Modifier.pointerInput(
+                        metrics.widthPx,
+                        metrics.heightPx,
+                        minScalePx,
+                        maxScalePx,
+                        state.currentPlant.image.value,
+                    ) {
+                        awaitEachGesture {
+                            if (state.currentPlant.image.value.isBlank()) return@awaitEachGesture
+
+                            val firstDown = awaitFirstDown(requireUnconsumed = false)
+                            var ratioX = latestRatioX
+                            var ratioY = latestRatioY
+                            var scalePx = latestScalePx
+                            if (
+                                !firstDown.position.isInsidePlantBounds(
+                                    ratioX = ratioX,
+                                    ratioY = ratioY,
+                                    containerWidth = metrics.widthPx,
+                                    containerHeight = metrics.heightPx,
+                                    scalePx = scalePx,
+                                )
+                            ) {
+                                return@awaitEachGesture
+                            }
+
+                            var anchorPointerId = firstDown.id
+                            var secondPointerId: PointerId? = null
+                            var initialDistancePx = 0f
+                            var initialScalePx = scalePx
+                            var previousAnchorPosition = firstDown.position
+                            firstDown.consume()
+
+                            while (true) {
+                                val event = awaitPointerEvent()
+                                val pressedChanges = event.changes.filter { it.pressed }
+                                if (pressedChanges.isEmpty()) break
+
+                                val anchorChange = pressedChanges.firstOrNull { it.id == anchorPointerId }
+                                    ?: pressedChanges.first().also { anchorPointerId = it.id }
+                                val secondChange = secondPointerId
+                                    ?.let { pointerId -> pressedChanges.firstOrNull { it.id == pointerId } }
+                                    ?: pressedChanges.firstOrNull { it.id != anchorPointerId }
+
+                                if (secondChange != null) {
+                                    val distancePx = (secondChange.position - anchorChange.position).getDistance()
+                                    if (secondPointerId != secondChange.id || initialDistancePx <= 0f) {
+                                        secondPointerId = secondChange.id
+                                        initialDistancePx = distancePx
+                                        initialScalePx = scalePx
+                                    }
+
+                                    if (initialDistancePx > 0f) {
+                                        scalePx = (initialScalePx * distancePx / initialDistancePx)
+                                            .roundToInt()
+                                            .coerceIn(minScalePx, maxScalePx)
+                                        onUpdateScale(scalePx)
+                                    }
+
+                                    previousAnchorPosition = anchorChange.position
+                                    event.changes.forEach { it.consume() }
+                                } else {
+                                    secondPointerId = null
+                                    initialDistancePx = 0f
+                                    val delta = anchorChange.position - previousAnchorPosition
+                                    previousAnchorPosition = anchorChange.position
+                                    ratioX = (ratioX + delta.x / metrics.widthPx).coerceIn(0.0, 1.0)
+                                    ratioY = (ratioY + delta.y / metrics.heightPx).coerceIn(0.0, 1.0)
+                                    onUpdatePosition(ratioX, ratioY)
+                                    anchorChange.consume()
+                                }
+                            }
+                        }
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
                     .padding(top = 24.dp, bottom = 12.dp)
                     .weight(1f)
                     .clip(RoundedCornerShape(20.dp)),
-            ) {
-                val w = constraints.maxWidth.toFloat()
-                val h = constraints.maxHeight.toFloat()
-
+            ) { metrics ->
                 // rememberUpdatedState로 pointerInput 람다 내부에서 항상 최신값 사용
-                val latestRatioX by rememberUpdatedState(state.currentPlant.ratioX)
-                val latestRatioY by rememberUpdatedState(state.currentPlant.ratioY)
-                val latestScalePx by rememberUpdatedState(currentScalePx)
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .pointerInput(w, h, minScalePx, maxScalePx, state.currentPlant.image.value) {
-                            awaitEachGesture {
-                                if (state.currentPlant.image.value.isBlank()) return@awaitEachGesture
-
-                                val firstDown = awaitFirstDown(requireUnconsumed = false)
-                                var ratioX = latestRatioX
-                                var ratioY = latestRatioY
-                                var scalePx = latestScalePx
-                                if (!firstDown.position.isInsidePlantBounds(ratioX, ratioY, w, h, scalePx)) {
-                                    return@awaitEachGesture
-                                }
-
-                                var anchorPointerId = firstDown.id
-                                var secondPointerId: PointerId? = null
-                                var initialDistancePx = 0f
-                                var initialScalePx = scalePx
-                                var previousAnchorPosition = firstDown.position
-                                firstDown.consume()
-
-                                while (true) {
-                                    val event = awaitPointerEvent()
-                                    val pressedChanges = event.changes.filter { it.pressed }
-                                    if (pressedChanges.isEmpty()) break
-
-                                    val anchorChange = pressedChanges.firstOrNull { it.id == anchorPointerId }
-                                        ?: pressedChanges.first().also { anchorPointerId = it.id }
-                                    val secondChange = secondPointerId
-                                        ?.let { pointerId -> pressedChanges.firstOrNull { it.id == pointerId } }
-                                        ?: pressedChanges.firstOrNull { it.id != anchorPointerId }
-
-                                    if (secondChange != null) {
-                                        val distancePx = (secondChange.position - anchorChange.position).getDistance()
-                                        if (secondPointerId != secondChange.id || initialDistancePx <= 0f) {
-                                            secondPointerId = secondChange.id
-                                            initialDistancePx = distancePx
-                                            initialScalePx = scalePx
-                                        }
-
-                                        if (initialDistancePx > 0f) {
-                                            scalePx = (initialScalePx * distancePx / initialDistancePx)
-                                                .roundToInt()
-                                                .coerceIn(minScalePx, maxScalePx)
-                                            onUpdateScale(scalePx)
-                                        }
-
-                                        previousAnchorPosition = anchorChange.position
-                                        event.changes.forEach { it.consume() }
-                                    } else {
-                                        secondPointerId = null
-                                        initialDistancePx = 0f
-                                        val delta = anchorChange.position - previousAnchorPosition
-                                        previousAnchorPosition = anchorChange.position
-                                        ratioX = (ratioX + delta.x / w).coerceIn(0.0, 1.0)
-                                        ratioY = (ratioY + delta.y / h).coerceIn(0.0, 1.0)
-                                        onUpdatePosition(ratioX, ratioY)
-                                        anchorChange.consume()
-                                    }
-                                }
-                            }
-                        },
-                ) {
-                    if (state.gardenImageUrl.isNotBlank()) {
-                        AsyncImage(
-                            model = state.gardenImageUrl,
-                            contentDescription = "정원 배경",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop,
-                        )
+                if (state.currentPlant.image.value.isNotBlank()) {
+                    val plantSizeDp = with(density) { currentScalePx.toDp() }
+                    val plantSizePx = currentScalePx.toFloat()
+                    val imageModel = if (state.currentPlant.image.type == PlantLocateImageType.LocalPath) {
+                        Uri.parse(state.currentPlant.image.value)
                     } else {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(CaudexTheme.colors.k5),
-                        )
+                        state.currentPlant.image.value
                     }
 
-                    state.existingPlants.plants.forEach { plant ->
-                        val sizeDp = with(density) { plant.scalePx.toDp() }
-                        val sizePx = plant.scalePx.toFloat()
-                        AsyncImage(
-                            model = plant.imageUrl,
-                            contentDescription = "식물",
-                            modifier = Modifier
-                                .size(sizeDp)
-                                .offset {
-                                    IntOffset(
-                                        (plant.ratioX * w - sizePx / 2).roundToInt(),
-                                        (plant.ratioY * h - sizePx / 2).roundToInt(),
-                                    )
-                                },
-                            contentScale = ContentScale.Fit,
-                        )
-                    }
-
-                    if (state.currentPlant.image.value.isNotBlank()) {
-                        val plantSizeDp = with(density) { currentScalePx.toDp() }
-                        val plantSizePx = currentScalePx.toFloat()
-                        val imageModel = if (state.currentPlant.image.type == PlantLocateImageType.LocalPath) {
-                            Uri.parse(state.currentPlant.image.value)
-                        } else {
-                            state.currentPlant.image.value
-                        }
-
-                        AsyncImage(
-                            model = imageModel,
-                            contentDescription = "내 식물",
-                            modifier = Modifier
-                                .size(plantSizeDp)
-                                .offset {
-                                    IntOffset(
-                                        (latestRatioX * w - plantSizePx / 2).roundToInt(),
-                                        (latestRatioY * h - plantSizePx / 2).roundToInt(),
-                                    )
-                                },
-                            contentScale = ContentScale.Fit,
-                        )
-                    }
+                    AsyncImage(
+                        model = imageModel,
+                        contentDescription = "내 식물",
+                        modifier = Modifier
+                            .size(plantSizeDp)
+                            .offset {
+                                IntOffset(
+                                    (latestRatioX * metrics.widthPx - plantSizePx / 2).roundToInt(),
+                                    (latestRatioY * metrics.heightPx - plantSizePx / 2).roundToInt(),
+                                )
+                            },
+                        contentScale = ContentScale.Fit,
+                    )
                 }
             }
 
@@ -313,6 +291,15 @@ private fun PlantLocateScreenContent(
         }
     }
 }
+
+private fun LocatedPlantUiModel.toGardenBoardPlantUiModel(): GardenBoardPlantUiModel =
+    GardenBoardPlantUiModel(
+        plantId = plantId,
+        imageUrl = imageUrl,
+        ratioX = ratioX,
+        ratioY = ratioY,
+        scalePx = scalePx,
+    )
 
 @Preview(showBackground = true)
 @Composable
