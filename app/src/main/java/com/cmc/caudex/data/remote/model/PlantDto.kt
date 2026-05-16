@@ -5,8 +5,19 @@ import com.cmc.caudex.domain.model.PlantDetail
 import kotlinx.serialization.Serializable
 
 @Serializable
+data class PlantUploadRequest(
+    val gardenId: String,
+    val name: String,
+    val managementTip: String,
+    val ratioX: Double,
+    val ratioY: Double,
+    val scale: Int,
+)
+
+@Serializable
 data class PlantUploadResponse(
     val plantId: Int,
+    val imageUrl: String = "",
 )
 
 @Serializable

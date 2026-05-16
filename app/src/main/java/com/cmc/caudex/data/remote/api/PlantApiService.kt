@@ -16,7 +16,9 @@ interface PlantApiService {
         @Part image: MultipartBody.Part,
         @Part("name") name: RequestBody,
         @Part("managementTip") managementTip: RequestBody,
+        @Part("gardenId") gardenId: RequestBody,
         @Part("ratioX") ratioX: RequestBody,
         @Part("ratioY") ratioY: RequestBody,
+        @Part("scale") scale: RequestBody,
     ): CaudexApiResponse<PlantUploadResult>
 }

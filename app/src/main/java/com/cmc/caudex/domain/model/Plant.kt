@@ -5,4 +5,5 @@ data class Plant(
     val ratioX: Double,
     val ratioY: Double,
     val plantUrl: String,
+    val scale: Int = 80,
 )

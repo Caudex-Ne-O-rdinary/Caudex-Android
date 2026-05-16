@@ -12,6 +12,7 @@ class UpdatePlantPositionUseCase @Inject constructor(
         plantId: Int,
         ratioX: Double,
         ratioY: Double,
+        scale: Int,
     ): Result<String> =
-        runSuspendCatching { gardenRepository.updatePlantPosition(gardenId, plantId, ratioX, ratioY) }
+        runSuspendCatching { gardenRepository.updatePlantPosition(gardenId, plantId, ratioX, ratioY, scale) }
 }

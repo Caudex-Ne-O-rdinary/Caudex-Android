@@ -20,10 +20,7 @@ interface PlantApi {
     @POST("api/plants")
     suspend fun uploadPlant(
         @Part image: MultipartBody.Part,
-        @Part("name") name: RequestBody,
-        @Part("managementTip") managementTip: RequestBody,
-        @Part("ratioX") ratioX: RequestBody,
-        @Part("ratioY") ratioY: RequestBody,
+        @Part("dto") dto: RequestBody,
     ): ApiResponse<PlantUploadResponse>
 
     @GET("api/plants/{plantId}")

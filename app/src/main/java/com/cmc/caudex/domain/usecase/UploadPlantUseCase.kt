@@ -9,13 +9,15 @@ class UploadPlantUseCase @Inject constructor(
     private val plantRepository: IPlantRepository,
 ) {
     suspend operator fun invoke(
+        gardenId: String,
         imageFile: File,
         name: String,
         managementTip: String,
         ratioX: Double,
         ratioY: Double,
+        scale: Int,
     ): Result<Int> =
         runSuspendCatching {
-            plantRepository.uploadPlant(imageFile, name, managementTip, ratioX, ratioY)
+            plantRepository.uploadPlant(gardenId, imageFile, name, managementTip, ratioX, ratioY, scale)
         }
 }
