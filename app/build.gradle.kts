@@ -68,6 +68,7 @@ dependencies {
     // Compose
     implementation(libs.coil.compose)
     implementation(libs.calendar)
+    implementation(libs.androidx.navigation.compose)
 
     // DI
     implementation(libs.hilt.android)
