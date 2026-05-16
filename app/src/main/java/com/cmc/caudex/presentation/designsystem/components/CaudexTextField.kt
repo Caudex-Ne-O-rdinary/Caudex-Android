@@ -34,6 +34,7 @@ fun CaudexTextField(
     maxLength: Int,
     guideText: String,
     height: Dp = 56.dp,
+    singleLine: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
@@ -65,7 +66,7 @@ fun CaudexTextField(
                 )
             },
             trailingIcon = {
-                if (value.isNotEmpty()) {
+                if (singleLine && value.isNotEmpty()) {
                     IconButton(onClick = { onValueChange("") }) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_delete),
@@ -75,7 +76,8 @@ fun CaudexTextField(
                     }
                 }
             },
-            singleLine = true,
+            singleLine = singleLine,
+            minLines = if (singleLine) 1 else 3,
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = CaudexTheme.colors.k5,
                 unfocusedContainerColor = CaudexTheme.colors.k5,
