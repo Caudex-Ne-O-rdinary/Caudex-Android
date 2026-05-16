@@ -8,9 +8,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.cmc.caudex.presentation.designsystem.theme.CaudexTheme
+import com.cmc.caudex.presentation.navigation.PlantLocateRoute
+import com.cmc.caudex.presentation.navigation.PlantRegisterRoute
 import com.cmc.caudex.presentation.navigation.RoomCreateRoute
 import com.cmc.caudex.presentation.navigation.RoomRoute
 import com.cmc.caudex.presentation.navigation.SplashRoute
+import com.cmc.caudex.presentation.plant.locate.PlantLocateScreen
+import com.cmc.caudex.presentation.plant.register.PlantRegisterScreen
 import com.cmc.caudex.presentation.room.RoomScreen
 import com.cmc.caudex.presentation.room.create.RoomCreateScreen
 import com.cmc.caudex.presentation.splash.SplashScreen
@@ -43,7 +47,27 @@ class MainActivity : ComponentActivity() {
                     }
                     composable<RoomRoute> {
                         RoomScreen(
-
+                            onNavigateToPlantRegister = {
+                                navController.navigate(PlantRegisterRoute)
+                            },
+                        )
+                    }
+                    composable<PlantRegisterRoute> {
+                        PlantRegisterScreen(
+                            onNavigateBack = {
+                                navController.popBackStack()
+                            },
+                            onAddImgClick = {},
+                            onNavigateToNext = {
+                                navController.navigate(PlantLocateRoute)
+                            },
+                        )
+                    }
+                    composable<PlantLocateRoute> {
+                        PlantLocateScreen(
+                            onNavigateBack = {
+                                navController.popBackStack()
+                            },
                         )
                     }
                 }
