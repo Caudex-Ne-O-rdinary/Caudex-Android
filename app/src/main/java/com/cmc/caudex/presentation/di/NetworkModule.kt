@@ -1,6 +1,5 @@
 package com.cmc.caudex.presentation.di
 
-import com.cmc.caudex.data.remote.api.TestApi
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides
@@ -43,8 +42,4 @@ object NetworkModule {
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
 
-    @Provides
-    @Singleton
-    fun provideTestApi(retrofit: Retrofit): TestApi =
-        retrofit.create(TestApi::class.java)
 }
