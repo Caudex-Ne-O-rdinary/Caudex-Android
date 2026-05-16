@@ -1,7 +1,7 @@
 package com.cmc.caudex.di
 
-import com.cmc.caudex.data.repository.fake.FakeGardenRepository
-import com.cmc.caudex.data.repository.fake.FakePlantRepository
+import com.cmc.caudex.data.repository.GardenRepositoryImpl
+import com.cmc.caudex.data.repository.PlantRepositoryImpl
 import com.cmc.caudex.domain.repository.IGardenRepository
 import com.cmc.caudex.domain.repository.IPlantRepository
 import dagger.Binds
@@ -15,12 +15,12 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindGardenRepository(
-        fakeGardenRepository: FakeGardenRepository,
+        gardenRepositoryImpl: GardenRepositoryImpl,
     ): IGardenRepository
 
     @Binds
     abstract fun bindPlantRepository(
-        fakePlantRepository: FakePlantRepository,
+        plantRepositoryImpl: PlantRepositoryImpl,
     ): IPlantRepository
 
 }
