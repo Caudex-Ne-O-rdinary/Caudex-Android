@@ -9,7 +9,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.cmc.caudex.presentation.designsystem.theme.CaudexTheme
 import com.cmc.caudex.presentation.navigation.RoomCreateRoute
+import com.cmc.caudex.presentation.navigation.RoomRoute
 import com.cmc.caudex.presentation.navigation.SplashRoute
+import com.cmc.caudex.presentation.room.RoomScreen
 import com.cmc.caudex.presentation.room.create.RoomCreateScreen
 import com.cmc.caudex.presentation.splash.SplashScreen
 import dagger.hilt.android.AndroidEntryPoint
@@ -24,17 +26,24 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 NavHost(navController = navController, startDestination = SplashRoute) {
                     composable<SplashRoute> {
-                        SplashScreen(onSplashComplete = {
-                            navController.navigate(RoomCreateRoute) {
-                                popUpTo<SplashRoute> { inclusive = true }
-                            }
-                        })
+                        SplashScreen(
+                            onSplashComplete = {
+                                navController.navigate(RoomCreateRoute) {
+                                    popUpTo<SplashRoute> { inclusive = true }
+                                }
+                            },
+                        )
                     }
                     composable<RoomCreateRoute> {
                         RoomCreateScreen(
                             onNavigateToNext = {
+                                navController.navigate(RoomRoute)
+                            },
+                        )
+                    }
+                    composable<RoomRoute> {
+                        RoomScreen(
 
-                            }
                         )
                     }
                 }

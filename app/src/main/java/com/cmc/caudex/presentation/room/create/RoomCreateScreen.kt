@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.dp
 import com.cmc.caudex.presentation.designsystem.components.CaudexButton
 import com.cmc.caudex.presentation.designsystem.theme.CaudexTheme
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -39,7 +38,7 @@ fun RoomCreateScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 16.dp)
+                    .padding(horizontal = 20.dp, vertical = 12.dp)
                     .navigationBarsPadding()
             ) {
                 CaudexButton(
