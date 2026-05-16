@@ -3,6 +3,7 @@ package com.cmc.caudex.data.remote.model
 import com.cmc.caudex.domain.model.Garden
 import com.cmc.caudex.domain.model.GardenDetail
 import com.cmc.caudex.domain.model.GardenTemplate
+import com.cmc.caudex.domain.model.DEFAULT_PLANT_SCALE
 import com.cmc.caudex.domain.model.Plant
 import kotlinx.serialization.Serializable
 
@@ -56,7 +57,7 @@ data class PlantResponse(
     val ratioY: Double,
     val plantUrl: String? = null,
     val imageUrl: String? = null,
-    val scale: Int = 80,
+    val scale: Int = DEFAULT_PLANT_SCALE,
 )
 
 @Serializable

@@ -8,8 +8,12 @@ import okhttp3.Interceptor
 import okhttp3.Response
 import javax.inject.Inject
 
+private const val HEADER_DEVICE_UID = "X-Device-UID"
+private const val HEADER_OS_TYPE = "X-OS-Type"
+private const val OS_TYPE_ANDROID = "android"
+
 class HeaderInterceptor @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
 ) : Interceptor {
     @SuppressLint("HardwareIds")
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -20,8 +24,8 @@ class HeaderInterceptor @Inject constructor(
         )
 
         val request = chain.request().newBuilder()
-            .addHeader("X-Device-UID", deviceUid)
-            .addHeader("X-OS-Type", "android")
+            .addHeader(HEADER_DEVICE_UID, deviceUid)
+            .addHeader(HEADER_OS_TYPE, OS_TYPE_ANDROID)
             .build()
 
         return chain.proceed(request)

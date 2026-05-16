@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cmc.caudex.data.local.GardenPreferencesDataSource
+import com.cmc.caudex.domain.model.DEFAULT_PLANT_SCALE
 import com.cmc.caudex.domain.model.Plant
 import com.cmc.caudex.domain.usecase.GetGardenUseCase
 import com.cmc.caudex.presentation.navigation.GardenInviteLink
@@ -110,12 +111,8 @@ class RoomViewModel @Inject constructor(
             imageUrl = plantUrl,
             ratioX = ratioX.coerceIn(0.0, 1.0),
             ratioY = ratioY.coerceIn(0.0, 1.0),
-            scalePx = scale.takeIf { it > 0 } ?: DEFAULT_PLANT_SCALE_PX_FALLBACK,
+            scalePx = scale.takeIf { it > 0 } ?: DEFAULT_PLANT_SCALE,
         )
-
-    private companion object {
-        const val DEFAULT_PLANT_SCALE_PX_FALLBACK = 80
-    }
 }
 
 @Immutable
@@ -133,7 +130,7 @@ data class RoomPlantUiModel(
     val imageUrl: String,
     val ratioX: Double,
     val ratioY: Double,
-    val scalePx: Int = 80,
+    val scalePx: Int = DEFAULT_PLANT_SCALE,
 )
 
 sealed interface RoomEffect {

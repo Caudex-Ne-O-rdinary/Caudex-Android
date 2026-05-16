@@ -1,21 +1,12 @@
 package com.cmc.caudex.presentation.room.guest
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.widget.Toast
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
@@ -25,20 +16,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
 import com.cmc.caudex.presentation.designsystem.components.CaudexButton
 import com.cmc.caudex.presentation.designsystem.components.UploadButton
 import com.cmc.caudex.presentation.designsystem.theme.CaudexTheme
-import kotlin.math.roundToInt
+import com.cmc.caudex.presentation.garden.GardenBoard
+import com.cmc.caudex.presentation.garden.GardenBoardPlantUiModel
+import com.cmc.caudex.presentation.util.GARDEN_LINK_CLIP_LABEL
+import com.cmc.caudex.presentation.util.LINK_COPIED_MESSAGE
+import com.cmc.caudex.presentation.util.copyTextToClipboard
 
 @Composable
 fun GuestRoomScreen(
@@ -59,9 +50,11 @@ fun GuestRoomScreen(
             when (effect) {
                 is GuestRoomEffect.NavigateToPlantFriend -> onNavigateToPlantFriend(effect.plantId, effect.isMine)
                 is GuestRoomEffect.CopyLinkToClipboard -> {
-                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    clipboard.setPrimaryClip(ClipData.newPlainText("garden_link", effect.link))
-                    Toast.makeText(context, "링크가 복사되었어요", Toast.LENGTH_SHORT).show()
+                    context.copyTextToClipboard(
+                        label = GARDEN_LINK_CLIP_LABEL,
+                        text = effect.link,
+                        toastMessage = LINK_COPIED_MESSAGE,
+                    )
                 }
             }
         }
@@ -100,49 +93,26 @@ fun GuestRoomScreen(
             }
 
             else -> {
-                BoxWithConstraints(
+                GardenBoard(
+                    gardenImageUrl = state.gardenImageUrl,
+                    plants = state.plants.map { it.toGardenBoardPlantUiModel() },
+                    onPlantClick = viewModel::onPlantClick,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(innerPadding)
                         .padding(horizontal = 20.dp, vertical = 40.dp)
                         .clip(RoundedCornerShape(20.dp)),
-                ) {
-                    val w = constraints.maxWidth.toFloat()
-                    val h = constraints.maxHeight.toFloat()
-                    val density = LocalDensity.current
-
-                    if (state.gardenImageUrl.isNotBlank()) {
-                        AsyncImage(
-                            model = state.gardenImageUrl,
-                            contentDescription = "정원 배경",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop,
-                        )
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(CaudexTheme.colors.k5),
-                        )
-                    }
-
-                    state.plants.forEach { plant ->
-                        val plantSize = with(density) { plant.scalePx.toDp() }
-                        val plantSizePx = plant.scalePx.toFloat()
-                        val offsetX = (plant.ratioX * w - plantSizePx / 2).roundToInt()
-                        val offsetY = (plant.ratioY * h - plantSizePx / 2).roundToInt()
-                        AsyncImage(
-                            model = plant.imageUrl,
-                            contentDescription = "식물",
-                            modifier = Modifier
-                                .size(plantSize)
-                                .offset { IntOffset(offsetX, offsetY) }
-                                .clickable { viewModel.onPlantClick(plant.plantId) },
-                            contentScale = ContentScale.Fit,
-                        )
-                    }
-                }
+                )
             }
         }
     }
 }
+
+private fun GuestPlantUiModel.toGardenBoardPlantUiModel(): GardenBoardPlantUiModel =
+    GardenBoardPlantUiModel(
+        plantId = plantId,
+        imageUrl = imageUrl,
+        ratioX = ratioX,
+        ratioY = ratioY,
+        scalePx = scalePx,
+    )

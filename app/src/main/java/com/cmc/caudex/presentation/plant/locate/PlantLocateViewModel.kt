@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.cmc.caudex.data.local.GardenPreferencesDataSource
+import com.cmc.caudex.domain.model.DEFAULT_PLANT_SCALE
 import com.cmc.caudex.domain.model.Plant
 import com.cmc.caudex.domain.usecase.GetGardenUseCase
 import com.cmc.caudex.domain.usecase.UpdatePlantPositionUseCase
@@ -25,6 +26,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+private const val DEFAULT_PLANT_ID = -1
+private const val DEFAULT_RATIO_X = 0.42
+private const val DEFAULT_RATIO_Y = 0.42
+private const val INVALID_PLANT_SCALE = -1
+private const val DIARY_SAVE_FAILED_MESSAGE = "식물은 등록됐지만 일기 저장에 실패했어요"
+
 @HiltViewModel
 class PlantLocateViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
@@ -33,7 +40,7 @@ class PlantLocateViewModel @Inject constructor(
     private val updatePlantPositionUseCase: UpdatePlantPositionUseCase,
     private val writeDiaryUseCase: WriteDiaryUseCase,
     private val gardenPreferencesDataSource: GardenPreferencesDataSource,
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
 ) : ViewModel() {
 
     private val route = savedStateHandle.toRoute<PlantLocateRoute>()
@@ -55,7 +62,7 @@ class PlantLocateViewModel @Inject constructor(
                 ),
                 ratioX = DEFAULT_RATIO_X,
                 ratioY = DEFAULT_RATIO_Y,
-                scalePx = DEFAULT_SCALE_PX,
+                scalePx = INVALID_PLANT_SCALE,
             ),
         ),
     )
@@ -83,7 +90,7 @@ class PlantLocateViewModel @Inject constructor(
         _uiState.update {
             it.copy(
                 currentPlant = it.currentPlant.copy(
-                    scalePx = scalePx.validScaleOr(DEFAULT_SCALE_PX),
+                    scalePx = scalePx.validScaleOr(INVALID_PLANT_SCALE),
                 ),
             )
         }
@@ -97,7 +104,7 @@ class PlantLocateViewModel @Inject constructor(
             _uiState.update { it.copy(isSaving = true, errorMessage = null) }
 
             val currentPlant = _uiState.value.currentPlant.copy(
-                scalePx = currentScalePx.validScaleOr(DEFAULT_SCALE_PX_FALLBACK),
+                scalePx = currentScalePx.validScaleOr(DEFAULT_PLANT_SCALE),
             )
             val result = when (mode) {
                 PlantLocateMode.Create -> uploadCurrentPlant(currentPlant)
@@ -174,7 +181,7 @@ class PlantLocateViewModel @Inject constructor(
             managementTip = managementTip,
             ratioX = currentPlant.ratioX,
             ratioY = currentPlant.ratioY,
-            scale = currentPlant.scalePx.takeIf { it > 0 } ?: DEFAULT_SCALE_PX_FALLBACK,
+            scale = currentPlant.scalePx.takeIf { it > 0 } ?: DEFAULT_PLANT_SCALE,
         ).getOrElse { return Result.failure(it) }
 
         gardenPreferencesDataSource.saveUploadedPlantId(plantId)
@@ -210,7 +217,7 @@ class PlantLocateViewModel @Inject constructor(
             plantId = DEFAULT_PLANT_ID,
             ratioX = currentPlant.ratioX,
             ratioY = currentPlant.ratioY,
-            scale = currentPlant.scalePx.takeIf { it > 0 } ?: DEFAULT_SCALE_PX_FALLBACK,
+            scale = currentPlant.scalePx.takeIf { it > 0 } ?: DEFAULT_PLANT_SCALE,
         ).map { null }
     }
 
@@ -220,7 +227,7 @@ class PlantLocateViewModel @Inject constructor(
             imageUrl = plantUrl,
             ratioX = ratioX.coerceIn(0.0, 1.0),
             ratioY = ratioY.coerceIn(0.0, 1.0),
-            scalePx = scale.takeIf { it > 0 } ?: DEFAULT_SCALE_PX_FALLBACK,
+            scalePx = scale.takeIf { it > 0 } ?: DEFAULT_PLANT_SCALE,
         )
 
     private fun Int.validScaleOr(default: Int): Int =
@@ -228,15 +235,6 @@ class PlantLocateViewModel @Inject constructor(
 
     private suspend fun getTargetGardenId(): String =
         routeGardenId.ifBlank { gardenPreferencesDataSource.getGardenIdOnce() }
-
-    private companion object {
-        const val DEFAULT_PLANT_ID = -1
-        const val DEFAULT_RATIO_X = 0.42
-        const val DEFAULT_RATIO_Y = 0.42
-        const val DEFAULT_SCALE_PX = -1
-        const val DEFAULT_SCALE_PX_FALLBACK = 80
-        const val DIARY_SAVE_FAILED_MESSAGE = "식물은 등록됐지만 일기 저장에 실패했어요"
-    }
 }
 
 @Immutable
@@ -275,9 +273,9 @@ data class LocatedPlantUiModel(
 @Immutable
 data class LocatedCurrentPlantUiModel(
     val image: PlantLocateImageUiModel = PlantLocateImageUiModel(),
-    val ratioX: Double = 0.42,
-    val ratioY: Double = 0.42,
-    val scalePx: Int = -1,
+    val ratioX: Double = DEFAULT_RATIO_X,
+    val ratioY: Double = DEFAULT_RATIO_Y,
+    val scalePx: Int = INVALID_PLANT_SCALE,
 )
 
 @Immutable
