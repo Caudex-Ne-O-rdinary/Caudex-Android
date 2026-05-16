@@ -3,4 +3,4 @@ package com.cmc.caudex.presentation.navigation
 import kotlinx.serialization.Serializable
 
 @Serializable data object SplashRoute
-@Serializable data object MainRoute
+@Serializable data object RoomCreateRoute
