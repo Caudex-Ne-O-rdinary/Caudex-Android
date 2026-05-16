@@ -1,4 +1,4 @@
-package com.cmc.caudex.ui.theme
+package com.cmc.caudex.presentation.designsystem.theme
 
 import androidx.compose.ui.graphics.Color
 
