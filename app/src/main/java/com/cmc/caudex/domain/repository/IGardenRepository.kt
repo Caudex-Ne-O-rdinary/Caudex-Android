@@ -22,6 +22,4 @@ interface IGardenRepository {
         ratioY: Double,
     ): String
 
-    suspend fun deletePlant(gardenId: String, plantId: Int): String
-
 }

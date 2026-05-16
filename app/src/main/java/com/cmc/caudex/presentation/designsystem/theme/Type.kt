@@ -24,6 +24,7 @@ data class CaudexTypography(
     val body1: TextStyle,
     val body2: TextStyle,
     val body3: TextStyle,
+    val body4: TextStyle,
 
     //caption
     val caption1: TextStyle,
@@ -71,6 +72,12 @@ val DefaultCaudexTypography = CaudexTypography(
         lineHeight = 21.sp,
         letterSpacing = -0.14.sp,
         fontWeight = FontWeight.Medium
+    ),
+    body4 = TextStyle(
+        fontSize = 14.sp,
+        lineHeight = 21.sp,
+        letterSpacing = -0.14.sp,
+        fontWeight = FontWeight.W400
     ),
     caption1 = TextStyle(
         fontSize = 12.sp,
