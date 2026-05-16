@@ -20,6 +20,7 @@ interface IGardenRepository {
         plantId: Int,
         ratioX: Double,
         ratioY: Double,
+        scale: Int,
     ): String
 
 }

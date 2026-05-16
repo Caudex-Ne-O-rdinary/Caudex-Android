@@ -6,11 +6,13 @@ import java.io.File
 interface IPlantRepository {
 
     suspend fun uploadPlant(
+        gardenId: String,
         imageFile: File,
         name: String,
         managementTip: String,
         ratioX: Double,
         ratioY: Double,
+        scale: Int,
     ): Int
 
     suspend fun getPlant(plantId: Int): PlantDetail

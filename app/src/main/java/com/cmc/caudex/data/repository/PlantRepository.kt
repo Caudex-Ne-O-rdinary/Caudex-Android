@@ -15,11 +15,13 @@ class PlantRepository @Inject constructor(
 ) : IPlantRepository {
 
     override suspend fun uploadPlant(
+        gardenId: String,
         imageFile: File,
         name: String,
         managementTip: String,
         ratioX: Double,
         ratioY: Double,
+        scale: Int,
     ): Int {
         val imagePart = MultipartBody.Part.createFormData(
             name = "image",
@@ -30,8 +32,10 @@ class PlantRepository @Inject constructor(
             image = imagePart,
             name = name.toRequestBody("text/plain".toMediaType()),
             managementTip = managementTip.toRequestBody("text/plain".toMediaType()),
+            gardenId = gardenId.toRequestBody("text/plain".toMediaType()),
             ratioX = ratioX.toString().toRequestBody("text/plain".toMediaType()),
             ratioY = ratioY.toString().toRequestBody("text/plain".toMediaType()),
+            scale = scale.toString().toRequestBody("text/plain".toMediaType()),
         ).result.plantId
     }
 

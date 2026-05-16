@@ -14,14 +14,16 @@ data class CreateGardenRequest(
 
 @Serializable
 data class GardenResponse(
-    val gardenUrl: String,
-    val name: String,
-    val templateUrl: String,
-    val createdAt: String,
+    val gardenId: String = "",
+    val gardenUrl: String = "",
+    val name: String = "",
+    val templateUrl: String = "",
+    val createdAt: String = "",
 )
 
 fun GardenResponse.toDomain(): Garden =
     Garden(
+        gardenId = gardenId,
         gardenUrl = gardenUrl,
         name = name,
         templateUrl = templateUrl,
@@ -52,7 +54,9 @@ data class PlantResponse(
     val plantId: Int,
     val ratioX: Double,
     val ratioY: Double,
-    val plantUrl: String,
+    val plantUrl: String? = null,
+    val imageUrl: String? = null,
+    val scale: Int = 80,
 )
 
 @Serializable
@@ -62,7 +66,13 @@ data class GardenDetailResponse(
 )
 
 fun PlantResponse.toDomain(): Plant =
-    Plant(plantId = plantId, ratioX = ratioX, ratioY = ratioY, plantUrl = plantUrl)
+    Plant(
+        plantId = plantId,
+        ratioX = ratioX,
+        ratioY = ratioY,
+        plantUrl = plantUrl.orEmpty().ifBlank { imageUrl.orEmpty() },
+        scale = scale,
+    )
 
 fun GardenDetailResponse.toDomain(): GardenDetail =
     GardenDetail(templateUrl = templateUrl, plants = plants.map { it.toDomain() })
@@ -74,10 +84,10 @@ data class UpdatePlantPositionRequest(
     val plantId: Int,
     val ratioX: Double,
     val ratioY: Double,
+    val scale: Int,
 )
 
 @Serializable
 data class GardenModifiedResponse(
     val modifiedAt: String,
 )
-

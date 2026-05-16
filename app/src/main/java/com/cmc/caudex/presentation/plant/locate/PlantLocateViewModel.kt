@@ -1,13 +1,21 @@
 package com.cmc.caudex.presentation.plant.locate
 
+import android.content.Context
+import android.net.Uri
 import androidx.compose.runtime.Immutable
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
+import com.cmc.caudex.data.local.GardenPreferencesDataSource
 import com.cmc.caudex.domain.model.Plant
 import com.cmc.caudex.domain.usecase.GetGardenUseCase
 import com.cmc.caudex.domain.usecase.UpdatePlantPositionUseCase
 import com.cmc.caudex.domain.usecase.UploadPlantUseCase
+import com.cmc.caudex.domain.usecase.WriteDiaryUseCase
+import com.cmc.caudex.presentation.navigation.PlantLocateRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -19,10 +27,21 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class PlantLocateViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val getGardenUseCase: GetGardenUseCase,
     private val uploadPlantUseCase: UploadPlantUseCase,
     private val updatePlantPositionUseCase: UpdatePlantPositionUseCase,
+    private val writeDiaryUseCase: WriteDiaryUseCase,
+    private val gardenPreferencesDataSource: GardenPreferencesDataSource,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
+
+    private val route = savedStateHandle.toRoute<PlantLocateRoute>()
+    private val routeGardenId: String = route.gardenId
+    private val imagePath: String = route.imagePath
+    private val plantName: String = route.plantName
+    private val managementTip: String = route.managementTip
+    private val diary: String = route.diary
 
     private val mode = PlantLocateMode.Create
 
@@ -31,12 +50,12 @@ class PlantLocateViewModel @Inject constructor(
             mode = mode,
             currentPlant = LocatedCurrentPlantUiModel(
                 image = PlantLocateImageUiModel(
-                    value = DEFAULT_IMAGE_PATH,
+                    value = imagePath,
                     type = PlantLocateImageType.LocalPath,
                 ),
                 ratioX = DEFAULT_RATIO_X,
                 ratioY = DEFAULT_RATIO_Y,
-                scale = DEFAULT_SCALE,
+                scalePx = DEFAULT_SCALE_PX,
             ),
         ),
     )
@@ -60,32 +79,37 @@ class PlantLocateViewModel @Inject constructor(
         }
     }
 
-    fun updatePlantScale(scale: Int) {
+    fun updatePlantScale(scalePx: Int) {
         _uiState.update {
             it.copy(
                 currentPlant = it.currentPlant.copy(
-                    scale = scale.validScaleOr(DEFAULT_SCALE),
+                    scalePx = scalePx.validScaleOr(DEFAULT_SCALE_PX),
                 ),
             )
         }
     }
 
-    fun submit() {
+    fun submit(currentScalePx: Int) {
         val state = _uiState.value
         if (state.isSaving) return
 
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true, errorMessage = null) }
 
-            val currentPlant = _uiState.value.currentPlant
+            val currentPlant = _uiState.value.currentPlant.copy(
+                scalePx = currentScalePx.validScaleOr(DEFAULT_SCALE_PX_FALLBACK),
+            )
             val result = when (mode) {
                 PlantLocateMode.Create -> uploadCurrentPlant(currentPlant)
                 PlantLocateMode.Edit -> updateCurrentPlantPosition(currentPlant)
             }
 
             result
-                .onSuccess {
+                .onSuccess { warningMessage ->
                     _uiState.update { it.copy(isSaving = false) }
+                    if (warningMessage != null) {
+                        _effect.emit(PlantLocateEffect.ShowToast(warningMessage))
+                    }
                     _effect.emit(PlantLocateEffect.SubmitSuccess)
                 }
                 .onFailure { throwable ->
@@ -103,11 +127,16 @@ class PlantLocateViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-            getGardenUseCase(DEFAULT_GARDEN_ID)
-                .onSuccess { garden ->
-                    val existingPlants = garden.plants
-                        .map { it.toUiModel() }
+            val gardenId = getTargetGardenId()
+            if (gardenId.isBlank()) {
+                val templateUrl = gardenPreferencesDataSource.getTemplateUrlOnce()
+                _uiState.update { it.copy(isLoading = false, gardenImageUrl = templateUrl) }
+                return@launch
+            }
 
+            getGardenUseCase(gardenId)
+                .onSuccess { garden ->
+                    val existingPlants = garden.plants.map { it.toUiModel() }
                     _uiState.update { state ->
                         state.copy(
                             isLoading = false,
@@ -116,44 +145,73 @@ class PlantLocateViewModel @Inject constructor(
                         )
                     }
                 }
-                .onFailure { throwable ->
+                .onFailure {
+                    val templateUrl = gardenPreferencesDataSource.getTemplateUrlOnce()
                     _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = throwable.message ?: "정원 정보를 불러오지 못했어요",
-                        )
+                        it.copy(isLoading = false, gardenImageUrl = templateUrl)
                     }
                 }
         }
     }
 
-    private suspend fun uploadCurrentPlant(currentPlant: LocatedCurrentPlantUiModel): Result<Int> {
-        if (DEFAULT_IMAGE_PATH.isBlank()) {
+    private suspend fun uploadCurrentPlant(currentPlant: LocatedCurrentPlantUiModel): Result<String?> {
+        if (imagePath.isBlank()) {
             return Result.failure(IllegalStateException("등록할 식물 이미지가 없어요"))
         }
 
-        return uploadPlantUseCase(
-            imageFile = File(DEFAULT_IMAGE_PATH),
-            name = DEFAULT_PLANT_NAME,
-            managementTip = DEFAULT_MANAGEMENT_TIP,
+        val imageFile = runCatching { contentUriToFile(imagePath) }
+            .getOrElse { return Result.failure(it) }
+
+        val gardenId = getTargetGardenId()
+        if (gardenId.isBlank()) {
+            return Result.failure(IllegalStateException("식물을 등록할 정원 정보가 없어요"))
+        }
+
+        val plantId = uploadPlantUseCase(
+            gardenId = gardenId,
+            imageFile = imageFile,
+            name = plantName,
+            managementTip = managementTip,
             ratioX = currentPlant.ratioX,
             ratioY = currentPlant.ratioY,
-        )
+            scale = currentPlant.scalePx.takeIf { it > 0 } ?: DEFAULT_SCALE_PX_FALLBACK,
+        ).getOrElse { return Result.failure(it) }
+
+        gardenPreferencesDataSource.saveUploadedPlantId(plantId)
+
+        val diaryContent = diary.trim()
+        if (diaryContent.isNotBlank()) {
+            writeDiaryUseCase(plantId, diaryContent)
+                .getOrElse {
+                    return Result.success(DIARY_SAVE_FAILED_MESSAGE)
+                }
+        }
+
+        return Result.success(null)
+    }
+
+    private fun contentUriToFile(uriString: String): File {
+        val uri = Uri.parse(uriString)
+        val inputStream = context.contentResolver.openInputStream(uri)
+            ?: error("이미지를 열 수 없어요")
+        val temp = File(context.cacheDir, "plant_upload_${System.currentTimeMillis()}.jpg")
+        inputStream.use { input ->
+            temp.outputStream().use { output -> input.copyTo(output) }
+        }
+        return temp
     }
 
     private suspend fun updateCurrentPlantPosition(
         currentPlant: LocatedCurrentPlantUiModel,
-    ): Result<String> {
-        if (DEFAULT_PLANT_ID <= 0) {
-            return Result.failure(IllegalStateException("수정할 식물 정보가 없어요"))
-        }
-
+    ): Result<String?> {
+        val gardenId = getTargetGardenId()
         return updatePlantPositionUseCase(
-            gardenId = DEFAULT_GARDEN_ID,
+            gardenId = gardenId,
             plantId = DEFAULT_PLANT_ID,
             ratioX = currentPlant.ratioX,
             ratioY = currentPlant.ratioY,
-        )
+            scale = currentPlant.scalePx.takeIf { it > 0 } ?: DEFAULT_SCALE_PX_FALLBACK,
+        ).map { null }
     }
 
     private fun Plant.toUiModel(): LocatedPlantUiModel =
@@ -162,24 +220,22 @@ class PlantLocateViewModel @Inject constructor(
             imageUrl = plantUrl,
             ratioX = ratioX.coerceIn(0.0, 1.0),
             ratioY = ratioY.coerceIn(0.0, 1.0),
-            scale = DEFAULT_SCALE,
+            scalePx = scale.takeIf { it > 0 } ?: DEFAULT_SCALE_PX_FALLBACK,
         )
-
-    private fun Double.validRatioOr(default: Double): Double =
-        takeIf { it in 0.0..1.0 } ?: default
 
     private fun Int.validScaleOr(default: Int): Int =
         takeIf { it > 0 } ?: default
 
+    private suspend fun getTargetGardenId(): String =
+        routeGardenId.ifBlank { gardenPreferencesDataSource.getGardenIdOnce() }
+
     private companion object {
-        const val DEFAULT_GARDEN_ID = "1"
         const val DEFAULT_PLANT_ID = -1
-        const val DEFAULT_IMAGE_PATH = ""
-        const val DEFAULT_PLANT_NAME = ""
-        const val DEFAULT_MANAGEMENT_TIP = ""
         const val DEFAULT_RATIO_X = 0.42
         const val DEFAULT_RATIO_Y = 0.42
-        const val DEFAULT_SCALE = -1
+        const val DEFAULT_SCALE_PX = -1
+        const val DEFAULT_SCALE_PX_FALLBACK = 80
+        const val DIARY_SAVE_FAILED_MESSAGE = "식물은 등록됐지만 일기 저장에 실패했어요"
     }
 }
 
@@ -213,7 +269,7 @@ data class LocatedPlantUiModel(
     val imageUrl: String,
     val ratioX: Double,
     val ratioY: Double,
-    val scale: Int,
+    val scalePx: Int,
 )
 
 @Immutable
@@ -221,7 +277,7 @@ data class LocatedCurrentPlantUiModel(
     val image: PlantLocateImageUiModel = PlantLocateImageUiModel(),
     val ratioX: Double = 0.42,
     val ratioY: Double = 0.42,
-    val scale: Int = -1,
+    val scalePx: Int = -1,
 )
 
 @Immutable
@@ -237,4 +293,5 @@ enum class PlantLocateImageType {
 
 sealed interface PlantLocateEffect {
     data object SubmitSuccess : PlantLocateEffect
+    data class ShowToast(val message: String) : PlantLocateEffect
 }
