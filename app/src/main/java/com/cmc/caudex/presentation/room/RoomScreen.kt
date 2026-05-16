@@ -1,6 +1,5 @@
 package com.cmc.caudex.presentation.room
 
-import android.R.attr.onClick
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,23 +16,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.cmc.caudex.R
 import com.cmc.caudex.presentation.designsystem.components.CaudexButton
 import com.cmc.caudex.presentation.designsystem.components.UploadButton
 import com.cmc.caudex.presentation.designsystem.theme.CaudexTheme
 
 @Composable
 fun RoomScreen(
+    onNavigateToPlantRegister: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    RoomContent(modifier = modifier)
+    RoomContent(
+        onNavigateToPlantRegister = onNavigateToPlantRegister,
+        modifier = modifier,
+    )
 }
 
 @Composable
 private fun RoomContent(
+    onNavigateToPlantRegister: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -55,7 +57,7 @@ private fun RoomContent(
                 CaudexButton(
                     modifier = Modifier.weight(1f),
                     text = "식물 업로드하기",
-                    onClick = { },
+                    onClick = onNavigateToPlantRegister,
                 )
             }
         },
@@ -96,6 +98,8 @@ fun Checkerboard(
 @Composable
 private fun RoomScreenPreview() {
     CaudexTheme {
-        RoomScreen()
+        RoomScreen(
+            onNavigateToPlantRegister = {},
+        )
     }
 }

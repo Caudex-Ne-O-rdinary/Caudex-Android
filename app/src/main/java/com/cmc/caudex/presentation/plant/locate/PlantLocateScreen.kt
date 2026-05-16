@@ -27,12 +27,21 @@ import com.cmc.caudex.presentation.designsystem.theme.CaudexTheme
 import com.cmc.caudex.presentation.room.Checkerboard
 
 @Composable
-fun PlantLocateScreen() {
-    PlantLocateScreenContent()
+fun PlantLocateScreen(
+    onNavigateBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    PlantLocateScreenContent(
+        onNavigateBack = onNavigateBack,
+        modifier = modifier,
+    )
 }
 
 @Composable
-private fun PlantLocateScreenContent(modifier: Modifier = Modifier) {
+private fun PlantLocateScreenContent(
+    onNavigateBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = CaudexTheme.colors.k50,
@@ -46,7 +55,7 @@ private fun PlantLocateScreenContent(modifier: Modifier = Modifier) {
                 contentAlignment = Alignment.CenterStart,
             ) {
                 IconButton(
-                    onClick = { },
+                    onClick = onNavigateBack,
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_chevron),
@@ -100,6 +109,8 @@ private fun PlantLocateScreenContent(modifier: Modifier = Modifier) {
 @Composable
 private fun PlantLocateScreenPreview() {
     CaudexTheme {
-        PlantLocateScreen()
+        PlantLocateScreen(
+            onNavigateBack = {},
+        )
     }
 }
