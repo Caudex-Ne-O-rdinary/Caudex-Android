@@ -1,5 +1,8 @@
-package com.cmc.caudex.presentation.di
+package com.cmc.caudex.di
 
+import com.cmc.caudex.data.remote.api.GardenApi
+import com.cmc.caudex.data.remote.api.PlantApi
+import com.cmc.caudex.data.remote.interceptor.HeaderInterceptor
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides
@@ -20,8 +23,9 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient =
+    fun provideOkHttpClient(headerInterceptor: HeaderInterceptor): OkHttpClient =
         OkHttpClient.Builder()
+            .addInterceptor(headerInterceptor)
             .addInterceptor(
                 HttpLoggingInterceptor().apply {
                     level = HttpLoggingInterceptor.Level.BODY
@@ -42,4 +46,13 @@ object NetworkModule {
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
 
+    @Provides
+    @Singleton
+    fun provideGardenApi(retrofit: Retrofit): GardenApi =
+        retrofit.create(GardenApi::class.java)
+
+    @Provides
+    @Singleton
+    fun providePlantApi(retrofit: Retrofit): PlantApi =
+        retrofit.create(PlantApi::class.java)
 }
