@@ -22,6 +22,10 @@ object ColorPalette {
     val k400 = Color(0xFFA29D90)
     val k600 = Color(0xFF6F6A5F)
     val k900 = Color(0xFF2E2B25)
+
+    // Action
+    val red = Color(0xFF03D46F)
+    val green = Color(0xFF03D46F)
 }
 
 @Immutable
@@ -38,6 +42,8 @@ data class PickleColors(
     val k400: Color,
     val k600: Color,
     val k900: Color,
+    val red: Color,
+    val green: Color
 )
 
 val LightCaudexColors = PickleColors(
@@ -53,6 +59,8 @@ val LightCaudexColors = PickleColors(
     k400 = ColorPalette.k400,
     k600 = ColorPalette.k600,
     k900 = ColorPalette.k900,
+    red = ColorPalette.red,
+    green = ColorPalette.green,
 )
 
 val LocalCaudexColors = staticCompositionLocalOf { LightCaudexColors }
