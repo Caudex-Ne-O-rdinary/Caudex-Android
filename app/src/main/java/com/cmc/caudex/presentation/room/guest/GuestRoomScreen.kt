@@ -1,9 +1,5 @@
 package com.cmc.caudex.presentation.room.guest
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,6 +27,7 @@ import com.cmc.caudex.presentation.designsystem.components.UploadButton
 import com.cmc.caudex.presentation.designsystem.theme.CaudexTheme
 import com.cmc.caudex.presentation.garden.GardenBoard
 import com.cmc.caudex.presentation.garden.GardenBoardPlantUiModel
+import com.cmc.caudex.presentation.util.copyTextToClipboard
 
 @Composable
 fun GuestRoomScreen(
@@ -51,9 +48,11 @@ fun GuestRoomScreen(
             when (effect) {
                 is GuestRoomEffect.NavigateToPlantFriend -> onNavigateToPlantFriend(effect.plantId, effect.isMine)
                 is GuestRoomEffect.CopyLinkToClipboard -> {
-                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    clipboard.setPrimaryClip(ClipData.newPlainText("garden_link", effect.link))
-                    Toast.makeText(context, "링크가 복사되었어요", Toast.LENGTH_SHORT).show()
+                    context.copyTextToClipboard(
+                        label = "garden_link",
+                        text = effect.link,
+                        toastMessage = "링크가 복사되었어요",
+                    )
                 }
             }
         }
