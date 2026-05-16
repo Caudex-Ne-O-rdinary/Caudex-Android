@@ -41,6 +41,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.cmc.caudex.R
+import com.cmc.caudex.domain.model.DEFAULT_PLANT_SCALE
 import com.cmc.caudex.presentation.designsystem.components.CaudexButton
 import com.cmc.caudex.presentation.designsystem.theme.CaudexTheme
 import com.cmc.caudex.presentation.garden.GardenBoard
@@ -49,7 +50,7 @@ import kotlin.math.roundToInt
 
 private const val PLANT_SCALE_MIN_DP = 40
 private const val PLANT_SCALE_MAX_DP = 200
-private const val PLANT_SCALE_DEFAULT_DP = 80
+private const val PLANT_SCALE_DEFAULT_DP = DEFAULT_PLANT_SCALE
 
 private fun Offset.isInsidePlantBounds(
     ratioX: Double,

@@ -26,6 +26,8 @@ import com.cmc.caudex.presentation.designsystem.components.UploadButton
 import com.cmc.caudex.presentation.designsystem.theme.CaudexTheme
 import com.cmc.caudex.presentation.garden.GardenBoard
 import com.cmc.caudex.presentation.garden.GardenBoardPlantUiModel
+import com.cmc.caudex.presentation.util.GARDEN_LINK_CLIP_LABEL
+import com.cmc.caudex.presentation.util.LINK_COPIED_MESSAGE
 import com.cmc.caudex.presentation.util.copyTextToClipboard
 
 @Composable
@@ -47,9 +49,9 @@ fun RoomScreen(
             when (effect) {
                 is RoomEffect.CopyLinkToClipboard -> {
                     context.copyTextToClipboard(
-                        label = "garden_link",
+                        label = GARDEN_LINK_CLIP_LABEL,
                         text = effect.link,
-                        toastMessage = "링크가 복사되었어요",
+                        toastMessage = LINK_COPIED_MESSAGE,
                     )
                 }
                 is RoomEffect.NavigateToPlantFriend -> {

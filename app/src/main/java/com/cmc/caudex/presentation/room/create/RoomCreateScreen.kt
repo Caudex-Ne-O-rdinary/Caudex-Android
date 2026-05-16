@@ -431,17 +431,21 @@ private val previewTemplates = RoomGardenTemplateCollection(
         RoomGardenTemplateUiModel(
             templateId = 1,
             name = "숲",
-            imageUrl = "https://caudex.duckdns.org/images/garden-template-1.png",
+            imageUrl = PREVIEW_TEMPLATE_FOREST_URL,
         ),
         RoomGardenTemplateUiModel(
             templateId = 2,
             name = "온실",
-            imageUrl = "https://caudex.duckdns.org/images/garden-template-2.png",
+            imageUrl = PREVIEW_TEMPLATE_GREENHOUSE_URL,
         ),
         RoomGardenTemplateUiModel(
             templateId = 3,
             name = "창가",
-            imageUrl = "https://caudex.duckdns.org/images/garden-template-3.png",
+            imageUrl = PREVIEW_TEMPLATE_WINDOW_URL,
         ),
     ),
 )
+
+private const val PREVIEW_TEMPLATE_FOREST_URL = "https://caudex.duckdns.org/images/garden-template-1.png"
+private const val PREVIEW_TEMPLATE_GREENHOUSE_URL = "https://caudex.duckdns.org/images/garden-template-2.png"
+private const val PREVIEW_TEMPLATE_WINDOW_URL = "https://caudex.duckdns.org/images/garden-template-3.png"
