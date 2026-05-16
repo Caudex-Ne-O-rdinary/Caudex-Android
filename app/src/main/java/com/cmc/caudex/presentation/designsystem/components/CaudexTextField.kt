@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -34,15 +35,16 @@ fun CaudexTextField(
     maxLength: Int,
     guideText: String,
     height: Dp = 56.dp,
+    textFiledColor: Color = CaudexTheme.colors.k5,
     singleLine: Boolean = true,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
 
         Text(
             text = title,
             style = CaudexTheme.typography.body2,
-            color = CaudexTheme.colors.k900
+            color = CaudexTheme.colors.k900,
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -57,12 +59,13 @@ fun CaudexTextField(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(height),
+            shape = RoundedCornerShape(8.dp),
             textStyle = CaudexTheme.typography.body1.copy(color = CaudexTheme.colors.k900),
             placeholder = {
                 Text(
                     text = hint,
                     style = CaudexTheme.typography.body1,
-                    color = CaudexTheme.colors.k400
+                    color = CaudexTheme.colors.k400,
                 )
             },
             trailingIcon = {
@@ -71,7 +74,7 @@ fun CaudexTextField(
                         Icon(
                             painter = painterResource(id = R.drawable.ic_delete),
                             contentDescription = "Clear text",
-                            tint = Color.Unspecified
+                            tint = Color.Unspecified,
                         )
                     }
                 }
@@ -79,32 +82,32 @@ fun CaudexTextField(
             singleLine = singleLine,
             minLines = if (singleLine) 1 else 3,
             colors = TextFieldDefaults.colors(
-                focusedContainerColor = CaudexTheme.colors.k5,
-                unfocusedContainerColor = CaudexTheme.colors.k5,
+                focusedContainerColor = textFiledColor,
+                unfocusedContainerColor = textFiledColor,
                 focusedTextColor = CaudexTheme.colors.k900,
                 unfocusedTextColor = CaudexTheme.colors.k900,
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
-                disabledIndicatorColor = Color.Transparent
-            )
+                disabledIndicatorColor = Color.Transparent,
+            ),
         )
 
         Spacer(modifier = Modifier.height(6.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
                 text = guideText,
                 style = CaudexTheme.typography.caption1,
-                color = CaudexTheme.colors.k400
+                color = CaudexTheme.colors.k400,
             )
 
             Text(
                 text = "${value.length}/$maxLength",
                 style = CaudexTheme.typography.caption1,
-                color = CaudexTheme.colors.k400
+                color = CaudexTheme.colors.k400,
             )
         }
     }
@@ -120,7 +123,7 @@ private fun CaudexTextFieldEmptyPreview() {
             onValueChange = {},
             hint = "테스트",
             maxLength = 4,
-            guideText = "테스트"
+            guideText = "테스트",
         )
     }
 }
@@ -137,7 +140,7 @@ private fun CaudexTextFieldTypingPreview() {
             onValueChange = { text = it },
             hint = "닉네임을 입력해주세요",
             maxLength = 4,
-            guideText = "최대 4자까지 입력할 수 있어요"
+            guideText = "최대 4자까지 입력할 수 있어요",
         )
     }
 }
