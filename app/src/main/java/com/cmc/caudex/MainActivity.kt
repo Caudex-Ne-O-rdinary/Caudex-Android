@@ -4,18 +4,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.cmc.caudex.presentation.designsystem.theme.CaudexTheme
-import com.cmc.caudex.presentation.navigation.MainRoute
+import com.cmc.caudex.presentation.navigation.RoomCreateRoute
 import com.cmc.caudex.presentation.navigation.SplashRoute
+import com.cmc.caudex.presentation.room.create.RoomCreateScreen
 import com.cmc.caudex.presentation.splash.SplashScreen
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -30,23 +25,20 @@ class MainActivity : ComponentActivity() {
                 NavHost(navController = navController, startDestination = SplashRoute) {
                     composable<SplashRoute> {
                         SplashScreen(onSplashComplete = {
-                            navController.navigate(MainRoute) {
+                            navController.navigate(RoomCreateRoute) {
                                 popUpTo<SplashRoute> { inclusive = true }
                             }
                         })
                     }
-                    composable<MainRoute> {
-                        MainPlaceholder()
+                    composable<RoomCreateRoute> {
+                        RoomCreateScreen(
+                            onNavigateToNext = {
+
+                            }
+                        )
                     }
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun MainPlaceholder() {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("Main")
     }
 }
